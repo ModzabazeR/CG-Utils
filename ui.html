@@ -1,0 +1,162 @@
+<div class="container">
+  <h3>Method Signatures</h3>
+  <div class="input-container">
+    <p>Bezier Curve: <input type="text" id="bezier" value="drawArc"></p>
+    <p>Control Point Type:
+      <select id="control-point-type">
+        <option value="point">Point(int x, int y)</option>
+        <option value="int">int x, int y</option>
+      </select>
+    </p>
+    <p>Your bezier curve method usage will be</p>
+    <code id="bezier-code">
+      drawArc(Point p1, Point p2, Point p3, Point p4);
+    </code>
+  </div>
+  <div class="input-container">
+    <p>Line: <input type="text" id="line" value="g.drawLine"></p>
+    <p>Line Point Type:
+      <select id="line-type">
+        <option value="point">Point(int x, int y)</option>
+        <option value="int">int x, int y</option>
+      </select>
+    </p>
+    <p>Your line method usage will be</p>
+    <code id="line-code">
+      g.drawLine(int x1, int y1, int x2, int y2);
+    </code>
+  </div>
+  <div class="button-group">
+    <button id="generate">Generate</button>
+    <button id="cancel" style="background-color: #ff4d4f;">Cancel</button>
+  </div>
+  <code id="code" style="display: none;"></code>
+</div>
+
+<script>
+  const bezier = document.getElementById('bezier');
+  const line = document.getElementById('line');
+  const controlPointType = document.getElementById('control-point-type');
+  const lineType = document.getElementById('line-type');
+
+  const handleBezierChange = () => {
+    const bezierValue = bezier.value;
+    const controlPointTypeValue = controlPointType.value;
+    const codeBlock = document.getElementById('bezier-code');
+    if (controlPointTypeValue === 'point') {
+      codeBlock.innerText = `${bezierValue}(Point p1, Point p2, Point p3, Point p4);`;
+    } else {
+      codeBlock.innerText = `${bezierValue}(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4);`;
+    }
+  }
+
+  const handleLineChange = () => {
+    const lineValue = line.value;
+    const lineTypeValue = lineType.value;
+    const codeBlock = document.getElementById('line-code');
+    if (lineTypeValue === 'point') {
+      codeBlock.innerText = `${lineValue}(Point p1, Point p2);`;
+    } else {
+      codeBlock.innerText = `${lineValue}(int x1, int y1, int x2, int y2);`;
+    }
+  }
+
+  bezier.oninput = handleBezierChange;
+  controlPointType.onchange = handleBezierChange;
+  line.oninput = handleLineChange;
+  lineType.onchange = handleLineChange;
+
+  document.getElementById('generate').onclick = () => {
+    const bezier = document.getElementById('bezier');
+    const line = document.getElementById('line');
+    const bezierValue = bezier.value;
+    const lineValue = line.value;
+    parent.postMessage({ pluginMessage: { type: 'generate-code', bezierValue, lineValue } }, '*')
+  }
+
+  document.getElementById('cancel').onclick = () => {
+    parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
+  }
+
+  window.onmessage = (event) => {
+    const message = event.data.pluginMessage;
+    if (message.type === 'code-generated') {
+      const codeBlock = document.getElementById('code');
+      codeBlock.innerText = message.code;
+      codeBlock.style.display = 'block';
+
+      // Copy to clipboard
+      codeBlock.onclick = () => {
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(codeBlock);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        document.execCommand('copy');
+        selection.removeAllRanges();
+        parent.postMessage({ pluginMessage: { type: 'show-toast', message: 'Code copied to clipboard' } }, '*')
+      }
+    }
+  }
+
+</script>
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  }
+
+  .container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  code {
+    background-color: #e6e6e6;
+    padding: 1rem;
+    display: block;
+    border-radius: 5px;
+    font-family: monospace;
+  }
+
+  button {
+    padding: 0.5rem 1rem;
+    border: none;
+    background-color: #0070f3;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 50%;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  input {
+    padding: 0.5rem;
+    border: 1px solid #949191;
+    border-radius: 5px;
+  }
+
+  select {
+    padding: 0.5rem;
+    border: 1px solid #949191;
+    border-radius: 5px;
+  }
+
+  .input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+</style>
